@@ -1,0 +1,183 @@
+import sys
+import math
+import random
+
+buster_template = {
+    'id'       : -1,
+    'visible'  : False,
+    'type'     : 'GHOST',
+    'action'   : 'IDLE',
+    'state'    : 'EMPTY',
+    'strategy' : -1,
+    'step'     : -1,
+    'pos_x'    : -1,
+    'pos_y'    : -1,
+    'bond'     : -1,
+    'move_x'   : -1,
+    'move_y'   : -1
+}
+
+entity_template = {
+    'id'      : -1,
+    'visible' : False,
+    'type'    : 'GHOST',
+    'action'  : 'HAUNTING',
+    'pos_x'   : -1,
+    'pos_y'   : -1,
+    'bond'    : -1,
+    'move_x'  : -1,
+    'move_y'  : -1
+}
+
+
+strategies = [
+    [
+        [16000, 2250],
+        [    0, 4500],
+        [16000, 6750],
+        [    0, 9000],
+        [16000, 4500],
+        [    0,    0]
+    ], [
+        [ 8000, 9000],
+        [16000,    0],
+        [12000, 9000],
+        [ 8000,    0],
+        [ 4000, 9000],
+        [    0,    0]
+    ]
+]
+
+
+busters_per_player = int(input())
+ghost_count        = int(input())
+my_team_id         = int(input())
+my_team_base       = [750, 750] if (my_team_id == 0) else [16000, 9000] 
+busters            = [buster_template.copy() for i in range(busters_per_player * 2)]
+ghosts             = [entity_template.copy() for i in range(ghost_count)]
+
+# game loop
+while True:
+    # Gathering map situation
+    for i in range(ghost_count):
+        ghosts[i]['visible'] = False
+
+    entities_visible = int(input())
+    for i in range(entities_visible):
+        entity_data   = input().split()
+        entity_id     = int(entity_data[0])
+        entity_x      = int(entity_data[1])
+        entity_y      = int(entity_data[2])
+        entity_type   = int(entity_data[3])
+        entity_state  = int(entity_data[4])
+        entity_value  = int(entity_data[5])
+
+        if (entity_type == -1):
+            # Ghost found
+            ghosts[entity_id]['visible'] = True
+            ghosts[entity_id]['id']      = entity_id
+            ghosts[entity_id]['pos_x']   = entity_x
+            ghosts[entity_id]['pos_y']   = entity_y
+            if (ghosts[entity_id]['bond'] != -1 and busters[ghosts[entity_id]['bond']]['bond'] != entity_id):
+                ghosts[entity_id]['bond'] = -1
+            
+ 
+        elif (entity_type == my_team_id):
+            # Buster found
+            if (busters[entity_id]['action'] == 'IDLE'):
+                busters[entity_id]['action'] = 'EXPLORING'
+            busters[entity_id]['visible'] = True
+            busters[entity_id]['id']      = entity_id
+            busters[entity_id]['pos_x']   = entity_x
+            busters[entity_id]['pos_y']   = entity_y
+            busters[entity_id]['state']   = 'EMPTY' if (entity_state == 0) else 'FULL'
+            if (busters[entity_id]['strategy'] == -1):
+                busters[entity_id]['strategy'] = strategies[busters[entity_id]['id'] % 2]
+                busters[entity_id]['step']     = 0
+                
+            if (entity_state == 2):
+                busters[entity_id]['action'] = 'STUNNED'
+                busters[entity_id]['state'] = 'EMPTY'
+                if (busters[entity_id]['bond'] != -1):
+                    ghosts[busters[entity_id]['bond']]['bond'] = -1
+                    busters[entity_id]['bond']                 = -1
+                
+            elif (busters[entity_id]['action'] == 'STUNNED'):
+                busters[entity_id]['action'] = 'EXPLORING'
+                
+                
+        else:
+            # Adversary Buster Found
+            pass
+
+    for i in range(ghost_count):
+        if (not ghosts[i]['visible'] or ghosts[i]['bond'] != -1):
+            continue
+        deploy = {'id' : -1, 'distance' : (16001 + 9001)}
+        for j in range(busters_per_player):
+            j += (my_team_id * busters_per_player)
+            if (busters[j]['action'] != 'EXPLORING'):
+                # That Buster is busy
+                continue;
+
+            distance = abs(abs(busters[j]['pos_x']) - abs(ghosts[i]['pos_x'])) + abs(abs(busters[j]['pos_y']) - abs(ghosts[i]['pos_x']))
+            if (distance < deploy['distance']):
+                deploy['id']       = busters[j]['id']
+                deploy['distance'] = distance
+
+        if (deploy['id'] != -1):
+            ghosts[i]['bond']               = deploy['id']
+            busters[deploy['id']]['action'] = 'PURSUIT'
+            busters[deploy['id']]['bond']  = ghosts[i]['id']
+
+
+    for j in range(busters_per_player):
+        j += (my_team_id * busters_per_player)
+        print(busters[j], file = sys.stderr)
+        if (busters[j]['action'] == 'IDLE'):
+            continue
+        
+        if (busters[j]['bond'] != -1):
+            if (busters[j]['state'] == 'FULL'):
+                distance = abs(abs(busters[j]['pos_x']) - abs(busters[j]['move_x'])) + abs(abs(busters[j]['pos_y']) - abs(busters[j]['move_y']))
+                if (distance < 800):
+                    busters[j]['action'] = 'RELEASE'
+                else:
+                    busters[j]['action'] = 'RETURN'
+                    busters[j]['move_x'] = my_team_base[0]
+                    busters[j]['move_y'] = my_team_base[1]
+            
+            elif (not ghosts[busters[j]['bond']]['visible']):
+                busters[j]['action'] = 'EXPLORING'
+                busters[j]['step']  = 0
+                busters[j]['bond']  = -1
+            else:
+                busters[j]['move_x'] = ghosts[busters[j]['bond']]['pos_x']
+                busters[j]['move_y'] = ghosts[busters[j]['bond']]['pos_y']
+
+                distance = abs(abs(busters[j]['pos_x']) - abs(busters[j]['move_x'])) + abs(abs(busters[j]['pos_y']) - abs(busters[j]['move_y']))
+                if (distance < 1760):
+                    busters[j]['action'] = 'BUST'
+        
+        if (busters[j]['action'] == 'EXPLORING'):
+            if (busters[j]['pos_x'] == busters[j]['strategy'][busters[j]['step']][0] and busters[j]['pos_y'] == busters[j]['strategy'][busters[j]['step']][1]):
+                busters[j]['step'] += 1
+                if (busters[j]['step'] >= len(busters[j]['strategy'])):
+                    busters[j]['step'] = 0
+                    
+
+        print(busters[j]['action'], busters[j]['step'], busters[j]['strategy'][busters[j]['step']][0], busters[j]['strategy'][busters[j]['step']][1], file = sys.stderr)
+        if (busters[j]['action'] == 'EXPLORING'):
+            print("MOVE", busters[j]['strategy'][busters[j]['step']][0], busters[j]['strategy'][busters[j]['step']][1])
+        elif (busters[j]['action'] == 'PURSUIT'):
+            print("MOVE", busters[j]['move_x'], busters[j]['move_y'])
+        elif (busters[j]['action'] == 'BUST'):
+            print("BUST", busters[j]['bond'])
+        elif (busters[j]['action'] == 'RETURN'):
+            print("MOVE", busters[j]['move_x'], busters[j]['move_y'])
+        elif (busters[j]['action'] == 'RELEASE'):
+            print("RELEASE")
+        else:
+            # Something goes wrong!
+            print("Something goes wrong!", file = sys.stderr)
+            print("MOVE", random.randrange(0, 16000), random.randrange(0, 9000))
