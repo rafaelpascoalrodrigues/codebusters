@@ -196,6 +196,14 @@ while True:
         if (busters[j]['action'] == 'IDLE'):
             continue
         
+        move_x = busters[j]['strategy'][busters[j]['step']][0]
+        move_y = busters[j]['strategy'][busters[j]['step']][1]
+
+        debug = "mov_t " + str(move_x) + "," + str(move_y)
+
+        print("MOVE", move_x, move_x, debug)
+        continue
+
         if (busters[j]['bond'] != -1):
             if(busters[j]['action'] == 'DISTURB'):
                 pass
