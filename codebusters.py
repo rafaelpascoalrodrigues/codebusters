@@ -14,6 +14,8 @@ def distanceFrom1D(position, distance):
 def distanceFrom2D(position1, distance1, position2, distance2):
     return (distanceFrom1D(position1, distance1) + distanceFrom1D(position2, distance2))
 
+# Turns trying to pursue an invisible ghost
+pursue = 3
 
 # Base position
 safe_distance_to_release = 1600
@@ -26,9 +28,10 @@ base = [
 buster_template = {
     'id'          : -1,
     'visible'     : False,
-    'type'        : 'GHOST',
+    'type'        : 'BUSTER',
     'action'      : 'IDLE',
     'state'       : 'EMPTY',
+    'pursue'      : -1,
     'strategy_id' : -1, 
     'strategy'    : -1,
     'step'        : -1,
@@ -169,7 +172,7 @@ while True:
                 # That Buster is busy
                 continue;
 
-            distance = abs(abs(busters[j]['pos_x']) - abs(adversaries[i]['pos_x'])) + abs(abs(busters[j]['pos_y']) - abs(adversaries[i]['pos_x']))
+            distance = abs(abs(busters[j]['pos_x']) - abs(adversaries[i]['pos_x'])) + abs(abs(busters[j]['pos_y']) - abs(adversaries[i]['pos_y']))
             if (distance < deploy['distance']):
                 deploy['id']       = busters[j]['id']
                 deploy['distance'] = distance
@@ -183,14 +186,15 @@ while True:
     for i in range(ghost_count):
         if (not ghosts[i]['visible'] or ghosts[i]['bond'] != -1):
             continue
+
         deploy = {'id' : -1, 'distance' : (16001 + 9001)}
         for j in range(busters_per_player):
             j += (my_team_id * busters_per_player)
             if (busters[j]['action'] != 'EXPLORING'):
                 # That Buster is busy
                 continue;
-
-            distance = abs(abs(busters[j]['pos_x']) - abs(ghosts[i]['pos_x'])) + abs(abs(busters[j]['pos_y']) - abs(ghosts[i]['pos_x']))
+            
+            distance = distanceFrom2D(busters[j]['pos_x'], ghosts[i]['pos_x'], busters[j]['pos_y'], ghosts[i]['pos_y'])
             if (distance < deploy['distance']):
                 deploy['id']       = busters[j]['id']
                 deploy['distance'] = distance
@@ -198,35 +202,61 @@ while True:
         if (deploy['id'] != -1):
             ghosts[i]['bond']               = deploy['id']
             busters[deploy['id']]['action'] = 'PURSUIT'
-            busters[deploy['id']]['bond']  = ghosts[i]['id']
+            busters[deploy['id']]['bond']   = ghosts[i]['id']
+            busters[deploy['id']]['pursue'] = pursue
 
 
     for j in range(busters_per_player):
         j += (my_team_id * busters_per_player)
-        print(busters[j], file = sys.stderr)
         if (busters[j]['action'] == 'IDLE'):
             continue
 
-        pos_x  = busters[j]['pos_x']
-        pos_y  = busters[j]['pos_y']
-        move_x = busters[j]['strategy'][busters[j]['step']][0]
-        move_y = busters[j]['strategy'][busters[j]['step']][1]
+        if (busters[j]['action'] == 'IDLE'):
+            pass
+        elif (busters[j]['action'] == 'PURSUIT'):
+            if (busters[j]['bond'] == -1):
+                busters[j]['action'] = 'EXPLORING'
 
-        if (distanceFrom2D(pos_x, move_x, pos_y, move_y) < 400):
-            busters[j]['step'] += 1
-            if (busters[j]['step'] >= len(busters[j]['strategy'])):
-                busters[j]['step']         = 0
-                busters[j]['strategy_id'] += 1
-                if (busters[j]['strategy_id'] >= len(strategies)):
-                    busters[j]['strategy_id'] = 0
-                busters[j]['strategy'] = strategies[busters[j]['strategy_id']]
+            distance = distanceFrom2D(busters[j]['pos_x'], ghosts[busters[j]['bond']]['pos_x'], busters[j]['pos_y'], ghosts[busters[j]['bond']]['pos_y'])
+            if (ghosts[busters[j]['bond']]['visible']):
+                busters[j]['pursue'] = pursue
+            else:
+                busters[j]['pursue'] -= 1
+                if (busters[j]['pursue'] < 0):
+                    ghosts[busters[j]['bond']]['bond'] = -1
+                    busters[j]['bond']                 = -1
+                    busters[j]['action']               = 'EXPLORING'
 
+            pos_x  = busters[j]['pos_x']
+            pos_y  = busters[j]['pos_y']
+
+        else:
+            busters[j]['action'] = 'EXPLORING'
+
+        if (busters[j]['action'] == 'EXPLORING'):
+            pos_x  = busters[j]['pos_x']
+            pos_y  = busters[j]['pos_y']
             move_x = busters[j]['strategy'][busters[j]['step']][0]
             move_y = busters[j]['strategy'][busters[j]['step']][1]
 
-        debug = "mov_t " + str(move_x) + "," + str(move_y)
+            if (distanceFrom2D(pos_x, move_x, pos_y, move_y) < 400):
+                busters[j]['step'] += 1
+                if (busters[j]['step'] >= len(busters[j]['strategy'])):
+                    busters[j]['step']         = 0
+                    busters[j]['strategy_id'] += 1
+                    if (busters[j]['strategy_id'] >= len(strategies)):
+                        busters[j]['strategy_id'] = 0
+                    busters[j]['strategy'] = strategies[busters[j]['strategy_id']]
 
-        print("MOVE", move_x, move_y, debug)
+        # Take the actions
+        if (busters[j]['action'] == 'EXPLORING'):
+            move_x = busters[j]['strategy'][busters[j]['step']][0]
+            move_y = busters[j]['strategy'][busters[j]['step']][1]
+            print("MOVE", move_x, move_y)
+        elif (busters[j]['action'] == 'PURSUIT'):
+            move_x = ghosts[busters[j]['bond']]['pos_x']
+            move_y = ghosts[busters[j]['bond']]['pos_y']
+            print("MOVE", move_x, move_y)
         continue
 
         if (busters[j]['bond'] != -1):
@@ -260,7 +290,6 @@ while True:
                     busters[j]['step'] = 0
                     
 
-        print(busters[j]['action'], busters[j]['step'], busters[j]['strategy'][busters[j]['step']][0], busters[j]['strategy'][busters[j]['step']][1], file = sys.stderr)
         if (busters[j]['action'] == 'EXPLORING'):
             print("MOVE", busters[j]['strategy'][busters[j]['step']][0], busters[j]['strategy'][busters[j]['step']][1])
         elif (busters[j]['action'] == 'DISTURB'):
