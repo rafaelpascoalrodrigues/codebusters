@@ -126,11 +126,11 @@ while True:
             busters[entity_id]['pos_y']   = entity_y
             busters[entity_id]['state']   = 'EMPTY' if (entity_state == 0) else 'FULL'
             if (busters[entity_id]['strategy'] == -1):
-                if (entity_id == 0):
+                if ((entity_id % busters_per_player) == 0):
                     busters[entity_id]['strategy_id'] = 0
-                elif (entity_id == 1):
+                elif ((entity_id % busters_per_player) == 1):
                     busters[entity_id]['strategy_id'] = 2
-                elif (entity_id == 2):
+                elif ((entity_id % busters_per_player) == 2):
                     busters[entity_id]['strategy_id'] = 1
                 else:
                     busters[entity_id]['strategy_id'] = 3
