@@ -199,7 +199,7 @@ while True:
 
         debug = "mov_t " + str(move_x) + "," + str(move_y)
 
-        print("MOVE", move_x, move_x, debug)
+        print("MOVE", move_x, move_y, debug)
         continue
 
         if (busters[j]['bond'] != -1):
