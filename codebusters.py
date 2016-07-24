@@ -213,6 +213,24 @@ while True:
 
         if (busters[j]['action'] == 'IDLE'):
             pass
+
+
+        elif (busters[j]['action'] == 'RETURN'):
+            distance = distanceFrom2D(busters[j]['pos_x'], my_team_base[0], busters[j]['pos_y'], my_team_base[1])
+            if (distance == 0):
+                busters[j]['action'] = 'RELEASE'
+
+
+        elif (busters[j]['action'] == 'BUST'):
+            if (busters[j]['state'] == 'FULL'):
+                busters[j]['action'] = 'RETURN'
+            else:
+                if (ghosts[busters[j]['bond']]['bond'] != -1):
+                    ghosts[busters[j]['bond']]['bond'] = -1
+                    busters[j]['bond']                 = -1
+                busters[j]['action'] = 'EXPLORING'
+
+
         elif (busters[j]['action'] == 'PURSUIT'):
             if (busters[j]['bond'] == -1):
                 busters[j]['action'] = 'EXPLORING'
@@ -220,6 +238,8 @@ while True:
             distance = distanceFrom2D(busters[j]['pos_x'], ghosts[busters[j]['bond']]['pos_x'], busters[j]['pos_y'], ghosts[busters[j]['bond']]['pos_y'])
             if (ghosts[busters[j]['bond']]['visible']):
                 busters[j]['pursue'] = pursue
+                if (distance <= 1584):
+                    busters[j]['action'] = 'BUST'
             else:
                 busters[j]['pursue'] -= 1
                 if (busters[j]['pursue'] < 0):
@@ -227,8 +247,6 @@ while True:
                     busters[j]['bond']                 = -1
                     busters[j]['action']               = 'EXPLORING'
 
-            pos_x  = busters[j]['pos_x']
-            pos_y  = busters[j]['pos_y']
 
         else:
             busters[j]['action'] = 'EXPLORING'
@@ -252,57 +270,21 @@ while True:
         if (busters[j]['action'] == 'EXPLORING'):
             move_x = busters[j]['strategy'][busters[j]['step']][0]
             move_y = busters[j]['strategy'][busters[j]['step']][1]
-            print("MOVE", move_x, move_y)
+            print("MOVE", move_x, move_y, busters[j]['action'])
         elif (busters[j]['action'] == 'PURSUIT'):
             move_x = ghosts[busters[j]['bond']]['pos_x']
             move_y = ghosts[busters[j]['bond']]['pos_y']
-            print("MOVE", move_x, move_y)
-        continue
-
-        if (busters[j]['bond'] != -1):
-            if(busters[j]['action'] == 'DISTURB'):
-                pass
-            elif (busters[j]['state'] == 'FULL'):
-                distance = abs(abs(busters[j]['pos_x']) - abs(busters[j]['move_x'])) + abs(abs(busters[j]['pos_y']) - abs(busters[j]['move_y']))
-                if (distance < 800):
-                    busters[j]['action'] = 'RELEASE'
-                else:
-                    busters[j]['action'] = 'RETURN'
-                    busters[j]['move_x'] = my_team_base[0]
-                    busters[j]['move_y'] = my_team_base[1]
-            
-            elif (not ghosts[busters[j]['bond']]['visible']):
-                busters[j]['action'] = 'EXPLORING'
-                busters[j]['step']  = 0
-                busters[j]['bond']  = -1
-            else:
-                busters[j]['move_x'] = ghosts[busters[j]['bond']]['pos_x']
-                busters[j]['move_y'] = ghosts[busters[j]['bond']]['pos_y']
-
-                distance = abs(abs(busters[j]['pos_x']) - abs(busters[j]['move_x'])) + abs(abs(busters[j]['pos_y']) - abs(busters[j]['move_y']))
-                if (distance < 1760):
-                    busters[j]['action'] = 'BUST'
-        
-        if (busters[j]['action'] == 'EXPLORING'):
-            if (busters[j]['pos_x'] == busters[j]['strategy'][busters[j]['step']][0] and busters[j]['pos_y'] == busters[j]['strategy'][busters[j]['step']][1]):
-                busters[j]['step'] += 1
-                if (busters[j]['step'] >= len(busters[j]['strategy'])):
-                    busters[j]['step'] = 0
-                    
-
-        if (busters[j]['action'] == 'EXPLORING'):
-            print("MOVE", busters[j]['strategy'][busters[j]['step']][0], busters[j]['strategy'][busters[j]['step']][1])
-        elif (busters[j]['action'] == 'DISTURB'):
-            print("STUN", busters[j]['bond'])
-        elif (busters[j]['action'] == 'PURSUIT'):
-            print("MOVE", busters[j]['move_x'], busters[j]['move_y'])
+            print("MOVE", move_x, move_y, busters[j]['action'])
         elif (busters[j]['action'] == 'BUST'):
-            print("BUST", busters[j]['bond'])
+            bond = busters[j]['bond']
+            print("BUST", bond, busters[j]['action'])
         elif (busters[j]['action'] == 'RETURN'):
-            print("MOVE", busters[j]['move_x'], busters[j]['move_y'])
+            move_x = my_team_base[0]
+            move_y = my_team_base[1]
+            print("MOVE", move_x, move_y, busters[j]['action'])
         elif (busters[j]['action'] == 'RELEASE'):
-            print("RELEASE")
+            bond = busters[j]['bond']
+            print("RELEASE", bond, busters[j]['action'])
         else:
             # Something goes wrong!
-            print("Something goes wrong!", file = sys.stderr)
-            print("MOVE", random.randrange(0, 16000), random.randrange(0, 9000))
+            print("MOVE", random.randrange(0, 16000), random.randrange(0, 9000), "Something goes wrong!")
