@@ -52,8 +52,10 @@ strategies = [
 busters_per_player = int(input())
 ghost_count        = int(input())
 my_team_id         = int(input())
+ad_team_id         = 1 if (my_team_id == 0) else 0
 my_team_base       = [750, 750] if (my_team_id == 0) else [16000, 9000] 
 busters            = [buster_template.copy() for i in range(busters_per_player * 2)]
+adversaries        = [buster_template.copy() for i in range(busters_per_player * 2)]
 ghosts             = [entity_template.copy() for i in range(ghost_count)]
 
 # game loop
@@ -61,6 +63,10 @@ while True:
     # Gathering map situation
     for i in range(ghost_count):
         ghosts[i]['visible'] = False
+
+    for i in range(busters_per_player * 2):
+        adversaries[i]['visible'] = False
+
 
     entities_visible = int(input())
     for i in range(entities_visible):
@@ -86,6 +92,8 @@ while True:
             # Buster found
             if (busters[entity_id]['action'] == 'IDLE'):
                 busters[entity_id]['action'] = 'EXPLORING'
+            if (busters[entity_id]['action'] == 'DISTURB'):
+                busters[entity_id]['action'] = 'EXPLORING'
             busters[entity_id]['visible'] = True
             busters[entity_id]['id']      = entity_id
             busters[entity_id]['pos_x']   = entity_x
@@ -108,7 +116,38 @@ while True:
                 
         else:
             # Adversary Buster Found
-            pass
+            adversaries[entity_id]['visible'] = True
+            adversaries[entity_id]['id']      = entity_id
+            adversaries[entity_id]['pos_x']   = entity_x
+            adversaries[entity_id]['pos_y']   = entity_y
+            if (entity_state == 2):
+                adversaries[entity_id]['action'] = 'STUNNED'
+            else:
+                adversaries[entity_id]['action'] = 'DISTURGING'
+
+
+    for i in range(busters_per_player):
+        i += (ad_team_id * busters_per_player)
+        if (not adversaries[i]['visible'] or adversaries[i]['action'] == 'STUNNED'):
+            continue
+
+        deploy = {'id' : -1, 'distance' : (16001 + 9001)}
+        for j in range(busters_per_player):
+            j += (my_team_id * busters_per_player)
+            if (busters[j]['action'] != 'EXPLORING'):
+                # That Buster is busy
+                continue;
+
+            distance = abs(abs(busters[j]['pos_x']) - abs(adversaries[i]['pos_x'])) + abs(abs(busters[j]['pos_y']) - abs(adversaries[i]['pos_x']))
+            if (distance < deploy['distance']):
+                deploy['id']       = busters[j]['id']
+                deploy['distance'] = distance
+
+        if (deploy['id'] != -1):
+            adversaries[i]['bond']          = deploy['id']
+            busters[deploy['id']]['action'] = 'DISTURB'
+            busters[deploy['id']]['bond']   = adversaries[i]['id']
+
 
     for i in range(ghost_count):
         if (not ghosts[i]['visible'] or ghosts[i]['bond'] != -1):
@@ -169,6 +208,8 @@ while True:
         print(busters[j]['action'], busters[j]['step'], busters[j]['strategy'][busters[j]['step']][0], busters[j]['strategy'][busters[j]['step']][1], file = sys.stderr)
         if (busters[j]['action'] == 'EXPLORING'):
             print("MOVE", busters[j]['strategy'][busters[j]['step']][0], busters[j]['strategy'][busters[j]['step']][1])
+        elif (busters[j]['action'] == 'DISTURB'):
+            print("STUN", busters[j]['bond'])
         elif (busters[j]['action'] == 'PURSUIT'):
             print("MOVE", busters[j]['move_x'], busters[j]['move_y'])
         elif (busters[j]['action'] == 'BUST'):
