@@ -49,19 +49,17 @@ entity_template = {
 
 strategies = [
     [
-        [16000, 2250],
-        [    0, 4500],
-        [16000, 6750],
-        [    0, 9000],
-        [16000, 4500],
-        [    0,    0]
+        [15000, 1125],
+        [ 1000, 1125]
     ], [
-        [ 8000, 9000],
-        [16000,    0],
-        [12000, 9000],
-        [ 8000,    0],
-        [ 4000, 9000],
-        [    0,    0]
+        [15000, 3375],
+        [ 1000, 3375]
+    ], [
+        [15000, 5625],
+        [ 1000, 5625]
+    ], [
+        [15000, 7875],
+        [ 1000, 7875]
     ]
 ]
 
@@ -120,7 +118,7 @@ while True:
             busters[entity_id]['pos_y']   = entity_y
             busters[entity_id]['state']   = 'EMPTY' if (entity_state == 0) else 'FULL'
             if (busters[entity_id]['strategy'] == -1):
-                busters[entity_id]['strategy'] = strategies[busters[entity_id]['id'] % 2]
+                busters[entity_id]['strategy'] = strategies[busters[entity_id]['id']]
                 busters[entity_id]['step']     = 0
                 
             if (entity_state == 2):
