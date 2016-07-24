@@ -214,6 +214,25 @@ while True:
         if (busters[j]['action'] == 'IDLE'):
             pass
 
+        elif (busters[j]['action'] == 'DISTURB'):
+            if (busters[j]['bond'] == -1):
+                busters[j]['action'] = 'EXPLORING'
+
+            distance = distanceFrom2D(busters[j]['pos_x'], adversaries[busters[j]['bond']]['pos_x'], busters[j]['pos_y'], adversaries[busters[j]['bond']]['pos_y'])
+            if (adversaries[busters[j]['bond']]['visible']):
+                if (adversaries[busters[j]['bond']]['action'] == 'STUNNED'):
+                    busters[j]['action'] = 'EXPLORING'
+                elif (distance <= 1584):
+                    busters[j]['action'] = 'STUN'
+                else:
+                    busters[j]['action'] = 'EXPLORING'
+            else:
+                if (busters[j]['pursue'] < 0):
+                    adversaries[busters[j]['bond']]['bond'] = -1
+                    busters[j]['bond']                      = -1
+                    busters[j]['action']                    = 'EXPLORING'
+
+
 
         elif (busters[j]['action'] == 'RETURN'):
             distance = distanceFrom2D(busters[j]['pos_x'], my_team_base[0], busters[j]['pos_y'], my_team_base[1])
@@ -285,6 +304,9 @@ while True:
         elif (busters[j]['action'] == 'RELEASE'):
             bond = busters[j]['bond']
             print("RELEASE", bond, busters[j]['action'])
+        elif (busters[j]['action'] == 'STUN'):
+            bond = busters[j]['bond']
+            print("STUN", bond, busters[j]['action'])
         else:
             # Something goes wrong!
             print("MOVE", random.randrange(0, 16000), random.randrange(0, 9000), "Something goes wrong!")
