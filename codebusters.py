@@ -2,6 +2,23 @@ import sys
 import math
 import random
 
+
+def distance_from(position, distance):
+    if (position > distance):
+        return (position - distance)
+    elif (position < distance):
+        return (distance - position)
+    return 0
+
+
+# Base position
+safe_distance_to_release = 1600
+safe_distance_to_release = int((safe_distance_to_release // 2) * 0.9)
+base = [
+    {'pos_x' :     0, 'pos_y' :    0},
+    {'pos_x' : 16000, 'pos_y' : 9000}
+]
+
 buster_template = {
     'id'       : -1,
     'visible'  : False,
@@ -53,7 +70,10 @@ busters_per_player = int(input())
 ghost_count        = int(input())
 my_team_id         = int(input())
 ad_team_id         = 1 if (my_team_id == 0) else 0
-my_team_base       = [750, 750] if (my_team_id == 0) else [16000, 9000] 
+my_team_base       = [
+    distance_from(base[my_team_id]['pos_x'], safe_distance_to_release),
+    distance_from(base[my_team_id]['pos_y'], safe_distance_to_release)
+] 
 busters            = [buster_template.copy() for i in range(busters_per_player * 2)]
 adversaries        = [buster_template.copy() for i in range(busters_per_player * 2)]
 ghosts             = [entity_template.copy() for i in range(ghost_count)]
