@@ -177,7 +177,9 @@ while True:
             continue
         
         if (busters[j]['bond'] != -1):
-            if (busters[j]['state'] == 'FULL'):
+            if(busters[j]['action'] == 'DISTURB'):
+                pass
+            elif (busters[j]['state'] == 'FULL'):
                 distance = abs(abs(busters[j]['pos_x']) - abs(busters[j]['move_x'])) + abs(abs(busters[j]['pos_y']) - abs(busters[j]['move_y']))
                 if (distance < 800):
                     busters[j]['action'] = 'RELEASE'
