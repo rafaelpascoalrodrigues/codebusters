@@ -24,18 +24,19 @@ base = [
 ]
 
 buster_template = {
-    'id'       : -1,
-    'visible'  : False,
-    'type'     : 'GHOST',
-    'action'   : 'IDLE',
-    'state'    : 'EMPTY',
-    'strategy' : -1,
-    'step'     : -1,
-    'pos_x'    : -1,
-    'pos_y'    : -1,
-    'bond'     : -1,
-    'move_x'   : -1,
-    'move_y'   : -1
+    'id'          : -1,
+    'visible'     : False,
+    'type'        : 'GHOST',
+    'action'      : 'IDLE',
+    'state'       : 'EMPTY',
+    'strategy_id' : -1, 
+    'strategy'    : -1,
+    'step'        : -1,
+    'pos_x'       : -1,
+    'pos_y'       : -1,
+    'bond'        : -1,
+    'move_x'      : -1,
+    'move_y'      : -1
 }
 
 entity_template = {
@@ -122,8 +123,9 @@ while True:
             busters[entity_id]['pos_y']   = entity_y
             busters[entity_id]['state']   = 'EMPTY' if (entity_state == 0) else 'FULL'
             if (busters[entity_id]['strategy'] == -1):
-                busters[entity_id]['strategy'] = strategies[busters[entity_id]['id']]
-                busters[entity_id]['step']     = 0
+                busters[entity_id]['strategy_id'] = busters[entity_id]['id']
+                busters[entity_id]['strategy']    = strategies[busters[entity_id]['strategy_id']]
+                busters[entity_id]['step']        = 0
                 
             if (entity_state == 2):
                 busters[entity_id]['action'] = 'STUNNED'
@@ -206,7 +208,12 @@ while True:
         if (distanceFrom2D(pos_x, move_x, pos_y, move_y) < 400):
             busters[j]['step'] += 1
             if (busters[j]['step'] >= len(busters[j]['strategy'])):
-                busters[j]['step'] = 0
+                busters[j]['step']         = 0
+                busters[j]['strategy_id'] += 1
+                if (busters[j]['strategy_id'] >= len(strategies)):
+                    busters[j]['strategy_id'] = 0
+                busters[j]['strategy'] = strategies[busters[j]['strategy_id']]
+
             move_x = busters[j]['strategy'][busters[j]['step']][0]
             move_y = busters[j]['strategy'][busters[j]['step']][1]
 
