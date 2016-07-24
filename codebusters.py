@@ -3,12 +3,16 @@ import math
 import random
 
 
-def distance_from(position, distance):
+def distanceFrom1D(position, distance):
     if (position > distance):
         return (position - distance)
     elif (position < distance):
         return (distance - position)
     return 0
+
+
+def distanceFrom2D(position1, distance1, position2, distance2):
+    return (distanceFrom1D(position1, distance1) + distanceFrom1D(position2, distance2))
 
 
 # Base position
@@ -69,8 +73,8 @@ ghost_count        = int(input())
 my_team_id         = int(input())
 ad_team_id         = 1 if (my_team_id == 0) else 0
 my_team_base       = [
-    distance_from(base[my_team_id]['pos_x'], safe_distance_to_release),
-    distance_from(base[my_team_id]['pos_y'], safe_distance_to_release)
+    distanceFrom1D(base[my_team_id]['pos_x'], safe_distance_to_release),
+    distanceFrom1D(base[my_team_id]['pos_y'], safe_distance_to_release)
 ] 
 busters            = [buster_template.copy() for i in range(busters_per_player * 2)]
 adversaries        = [buster_template.copy() for i in range(busters_per_player * 2)]
@@ -193,9 +197,18 @@ while True:
         print(busters[j], file = sys.stderr)
         if (busters[j]['action'] == 'IDLE'):
             continue
-        
+
+        pos_x  = busters[j]['pos_x']
+        pos_y  = busters[j]['pos_y']
         move_x = busters[j]['strategy'][busters[j]['step']][0]
         move_y = busters[j]['strategy'][busters[j]['step']][1]
+
+        if (distanceFrom2D(pos_x, move_x, pos_y, move_y) < 400):
+            busters[j]['step'] += 1
+            if (busters[j]['step'] >= len(busters[j]['strategy'])):
+                busters[j]['step'] = 0
+            move_x = busters[j]['strategy'][busters[j]['step']][0]
+            move_y = busters[j]['strategy'][busters[j]['step']][1]
 
         debug = "mov_t " + str(move_x) + "," + str(move_y)
 
