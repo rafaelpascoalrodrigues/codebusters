@@ -15,7 +15,7 @@ def distanceFrom2D(position1, distance1, position2, distance2):
     return (distanceFrom1D(position1, distance1) + distanceFrom1D(position2, distance2))
 
 # Turns trying to pursue an invisible ghost
-pursue = 3
+pursue = 7
 
 # Base position
 safe_distance_to_release = 1600
