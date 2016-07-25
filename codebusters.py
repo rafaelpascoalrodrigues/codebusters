@@ -121,6 +121,8 @@ while True:
                 busters[entity_id]['action'] = 'EXPLORING'
             if (busters[entity_id]['action'] == 'DISTURB'):
                 busters[entity_id]['action'] = 'EXPLORING'
+            if (busters[entity_id]['action'] == 'STUN'):
+                busters[entity_id]['action'] = 'EXPLORING' 
             busters[entity_id]['visible']  = True
             busters[entity_id]['id']       = entity_id
             busters[entity_id]['pos_x']    = entity_x
