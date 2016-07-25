@@ -32,6 +32,7 @@ buster_template = {
     'action'      : 'IDLE',
     'state'       : 'EMPTY',
     'pursue'      : -1,
+    'stun'        : -1,
     'strategy_id' : -1, 
     'strategy'    : -1,
     'step'        : -1,
@@ -120,11 +121,12 @@ while True:
                 busters[entity_id]['action'] = 'EXPLORING'
             if (busters[entity_id]['action'] == 'DISTURB'):
                 busters[entity_id]['action'] = 'EXPLORING'
-            busters[entity_id]['visible'] = True
-            busters[entity_id]['id']      = entity_id
-            busters[entity_id]['pos_x']   = entity_x
-            busters[entity_id]['pos_y']   = entity_y
-            busters[entity_id]['state']   = 'EMPTY' if (entity_state == 0) else 'FULL'
+            busters[entity_id]['visible']  = True
+            busters[entity_id]['id']       = entity_id
+            busters[entity_id]['pos_x']    = entity_x
+            busters[entity_id]['pos_y']    = entity_y
+            busters[entity_id]['stun']    -= 1
+            busters[entity_id]['state']    = 'EMPTY' if (entity_state == 0) else 'FULL'
             if (busters[entity_id]['strategy'] == -1):
                 if ((entity_id % busters_per_player) == 0):
                     busters[entity_id]['strategy_id'] = 0
@@ -222,8 +224,9 @@ while True:
             if (adversaries[busters[j]['bond']]['visible']):
                 if (adversaries[busters[j]['bond']]['action'] == 'STUNNED'):
                     busters[j]['action'] = 'EXPLORING'
-                elif (distance <= 1584):
+                elif (distance <= 1760 and busters[j]['stun'] < 0):
                     busters[j]['action'] = 'STUN'
+                    busters[j]['stun']   = 20
                 else:
                     busters[j]['action'] = 'EXPLORING'
             else:
@@ -257,7 +260,7 @@ while True:
             distance = distanceFrom2D(busters[j]['pos_x'], ghosts[busters[j]['bond']]['pos_x'], busters[j]['pos_y'], ghosts[busters[j]['bond']]['pos_y'])
             if (ghosts[busters[j]['bond']]['visible']):
                 busters[j]['pursue'] = pursue
-                if (distance <= 1584):
+                if (distance <= 1760):
                     busters[j]['action'] = 'BUST'
             else:
                 busters[j]['pursue'] -= 1
